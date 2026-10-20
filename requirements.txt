@@ -1,0 +1,13 @@
+# Testé avec Python 3.14.4 (Ubuntu, RTX 5060 Ti, CUDA 13).
+# Sous Windows natif, installer d'abord torch/torchvision/torchaudio depuis l'index CUDA de PyTorch
+# (voir readme.md) : la version PyPI de torch pour Windows ne gère que le CPU.
+torch==2.14.1
+torchvision==0.29.1
+torchaudio==2.11.0
+numpy==2.5.4
+pandas==3.0.6
+matplotlib==3.11.2
+pillow==12.3.0
+soundfile==0.14.0      # décodage des FLAC (torchaudio.load exige torchcodec depuis la 2.9)
+imageio-ffmpeg==0.6.0  # ffmpeg de secours pour scripts/prepare_vggsound.py
+ipykernel==7.4.0       # noyau Jupyter du notebook

@@ -1,0 +1,37 @@
+# --- Données : VGGSound pré-traité (~172 Go), à régénérer avec scripts/ (voir readme.md) ---
+data/
+temp_data/
+*.mp4
+*.flac
+*.tar.gz
+*.part
+
+# --- Poids des modèles et checkpoints ---
+checkpoints/
+*.pth
+*.pt
+*.ckpt
+*.safetensors
+
+# --- Journaux d'exécution ---
+logs/
+*.log
+
+# --- Environnements virtuels ---
+.venv/
+venv/
+env/
+.env
+
+# --- Python / Jupyter ---
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# --- Éditeurs et systèmes ---
+.vscode/
+.idea/
+.claude/
+.DS_Store
+Thumbs.db
+desktop.ini
