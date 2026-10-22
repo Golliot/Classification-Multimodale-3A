@@ -5,7 +5,7 @@
 | Versionné | Non versionné (`.gitignore`) |
 |---|---|
 | `scripts/` : téléchargement et pré-traitement du dataset en 1FPS | `data/` : dataset pré-traité (~172 Go), à se procurer à partir de prepare_vggsound.py |
-| `concatenation_all_frames.ipynb` : modèle, entraînement, évaluation | `temp_data/` : archives temporaires du pré-traitement (vide une fois le téléchargement et prétraitement terminés) |
+| `concatenation_all_frames.ipynb`, `late_fusion_2D_pretrained.ipynb` : modèles, entraînement, évaluation | `temp_data/` : archives temporaires du pré-traitement (vide une fois le téléchargement et prétraitement terminés) |
 | `readme.md`, `requirements.txt` | `checkpoints/`, `*.pth` : poids des modèles |
 | | `logs/`, `.venv/`, `__pycache__/` |
 
@@ -124,6 +124,8 @@ Les fichiers `.pth` ne sont pas versionnés (~400 Mo). Pour réutiliser un modè
 - `best_macro_f1_all_frames.pth` : poids seuls du meilleur modèle (macro-F1 de validation), chargés par les cellules d'évaluation sur le test ;
 - `checkpoint_all_frames.pth` : poids + optimiseur + historique, pour reprendre l'entraînement.
 
+Même chose pour `late_fusion_2D_pretrained.ipynb`, avec le suffixe `_pretrained`. Ce notebook télécharge aussi les poids ImageNet de torchvision au premier lancement (~130 Mo, dans `~/.cache/torch/hub/checkpoints/`).
+
 
 
 
@@ -170,6 +172,18 @@ Par la suite, on essaiera de conserver plus de frames, quitte à baisser la rév
 On utilisera un CNN vidéo/Image pré-entraîné pour la suite.
 
 Malgré ses nombreux défauts, cette première implémentation nous sert de base solide, ainsi que de point de référence pour de futures améliorations.
+
+## CNN pré-entraînés sur ImageNet : late_fusion_2D_pretrained.ipynb
+
+Même architecture que concatenation_all_frames (10 frames par clip moyennées, normalisation L2, modality dropout, têtes auxiliaires, tête MLP 1024 -> 309). Seuls les encodeurs et l'entraînement changent :
+
+- CNN image : ResNet-34 de torchvision pré-entraîné sur ImageNet, suivi de la même tête à skip connections longues (960 -> 512).
+- Spectrogramme log-mel à 128 bandes au lieu de 64 (FFT complétée à 1024 points pour qu'aucune bande Mel ne soit vide).
+- CNN audio : ResNet-18 pré-entraîné sur ImageNet. Sa première convolution est ramenée à 1 canal en moyennant les poids RGB. Même tête à skip connections longues. Son -> Embedding (512)
+- Les couches from scratch (têtes des encodeurs, têtes de classification) gardent un learning rate de 1e-3. Les troncs pré-entraînés apprennent moins vite, pour ne pas écraser leurs poids : 1e-4 pour l'image, 3e-4 pour l'audio (spectrogrammes plus éloignés des photos d'ImageNet).
+- Une première époque avec les troncs gelés, où seules les couches from scratch apprennent, puis 10 époques de fine-tuning de tout le modèle (warmup des troncs sur la première d'entre elles).
+
+Environ 29 min par époque de fine-tuning et 17 min pour l'époque de gel, soit ~5 h au total sur une RTX 5060 Ti. Poids : `checkpoints/best_macro_f1_pretrained.pth` et `checkpoints/checkpoint_pretrained.pth`.
 
 ---
 
